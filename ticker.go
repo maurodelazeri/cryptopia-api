@@ -8,22 +8,28 @@ import (
 type Ticks []*Tick
 
 type Tick struct {
-	Label 			   string  `json:"Label"`
-	TradePairId        int     `json:"TradePairId"`
-	AskPrice 		   float64 `json:"AskPrice"`
-	BidPrice   		   float64 `json:"BidPrice"`
-	Low    			   float64 `json:"Low"`
-	High          	   float64 `json:"High"`
-	Volume             float64 `json:"Volume"`
-	LastPrice          float64 `json:"bidPrice"`
-	BuyVolume          float64 `json:"BuyVolume"`
-	SellVolume         float64 `json:"SellVolume"`
-	Change             float64 `json:"Change"`
-	Open          	   float64 `json:"Open"`
-	Close          	   float64 `json:"Close"`
-	BaseVolume         float64 `json:"BaseVolume"`
-	BuyBaseVolume      float64 `json:"BuyBaseVolume"`
-	SellBaseVolume     float64 `json:"SellBaseVolume"`
+	ID             int64   `json:"TradePairId"`
+	Label          string  `json:"Label"`
+	AskPrice       float64 `json:"AskPrice"`
+	BidPrice       float64 `json:"BidPrice"`
+	Low            float64 `json:"Low"`
+	High           float64 `json:"High"`
+	Volume         float64 `json:"Volume"`
+	LastPrice      float64 `json:"LastPrice"`
+	BuyVolume      float64 `json:"BuyVolume"`
+	SellVolume     float64 `json:"SellVolume"`
+	Change         float64 `json:"Change"`
+	Open           float64 `json:"Open"`
+	Close          float64 `json:"Close"`
+	BaseVolume     float64 `json:"BaseVolume"`
+	BuyBaseVolume  float64 `json:"BuyBaseVolume"`
+	SellBaseVolume float64 `json:"SellBaseVolume"`
+}
+
+type jsonResponse struct {
+	Success bool            `json:"success"`
+	Message string          `json:"message"`
+	Result  json.RawMessage `json:"data"`
 }
 
 // cryptopia API implementation of Ticker endpoint.
@@ -58,32 +64,43 @@ type Tick struct {
   ]
 */
 
-func (client *Client) GetTickers() (Ticks, error) {
+func (client *Client) GetMarkets() (Ticks, error) {
 
 	resp, err := client.do("GetMarkets", nil)
 	if err != nil {
 		return nil, fmt.Errorf("Client.do: %v", err)
 	}
 
-	res := make(Ticks, 0)
+	var response jsonResponse
 
-	if err := json.Unmarshal(resp, &res); err != nil {
+	if err := json.Unmarshal(resp, &response); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: %v", err)
+	}
+
+	res := make(Ticks, 0)
+	
+	if err := json.Unmarshal(response.Result, &res); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %v", err)
 	}
 
 	return res, nil
 }
 
-func (client *Client) GetTicker(id string) (*Tick, error) {
-
+func (client *Client) GetMarket(id string) (*Tick, error) {
 	resp, err := client.do("GetMarkets"+"/"+id, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Client.do: %v", err)
 	}
 
-	res := make(Ticks, 1)
+	var response jsonResponse
 
-	if err := json.Unmarshal(resp, &res); err != nil {
+	if err := json.Unmarshal(resp, &response); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: %v", err)
+	}
+
+	res := make(Ticks, 0)
+	
+	if err := json.Unmarshal(response.Result, &res); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %v", err)
 	}
 
